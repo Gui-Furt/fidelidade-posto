@@ -8,5 +8,6 @@ import { PontosModule } from './pontos.module';
   imports: [ClientesModule, PontosModule],
   providers: [TransacoesService],
   controllers: [TransacoesController],
+  exports: [TransacoesService], // 👈 ESTA LINHA RESOLVE TUDO
 })
 export class TransacoesModule {}
