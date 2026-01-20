@@ -20,7 +20,7 @@ export class PontosService {
     return 0;
   }
 
-  async adicionar(cliente: Cliente, pontos: number) {
+  async adicionarPontos(cliente: Cliente, pontos: number) {
     let registro = await this.repo.findOne({
       where: { cliente: { id: cliente.id } },
     });
@@ -30,6 +30,16 @@ export class PontosService {
     }
 
     registro.saldo += pontos;
+    registro.atualizadoEm = new Date();
+
     return this.repo.save(registro);
+  }
+
+  async saldo(clienteId: string) {
+    const registro = await this.repo.findOne({
+      where: { cliente: { id: clienteId } },
+    });
+
+    return registro ? registro.saldo : 0;
   }
 }
