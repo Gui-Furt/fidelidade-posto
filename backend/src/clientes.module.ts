@@ -5,5 +5,6 @@ import { ClientesController } from './clientes.controller';
 @Module({
   providers: [ClientesService],
   controllers: [ClientesController],
+  exports: [ClientesService], // 👈 ESTA LINHA RESOLVE 100%
 })
 export class ClientesModule {}
