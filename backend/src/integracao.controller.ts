@@ -12,12 +12,16 @@ export class IntegracaoController {
 
   @Post('registrar')
   @UseGuards(ApiKeyGuard)
-  registrar(@Body() body: any, @Req() req: any) {
+  async registrar(@Body() body: any, @Req() req: any) {
     const { cpf, tipo, quantidade, unidade, valor } = body;
 
-    let cliente = this.clientes.buscarPorCPF(cpf);
+    let cliente = await this.clientes.buscarPorCPF(cpf);
+
     if (!cliente) {
-      cliente = this.clientes.criar({ nome: 'Cliente PDV', cpf });
+      cliente = await this.clientes.criar({
+        nome: 'Cliente PDV',
+        cpf,
+      });
     }
 
     return this.transacoes.registrar({
