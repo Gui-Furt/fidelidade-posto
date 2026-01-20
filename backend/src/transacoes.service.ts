@@ -24,13 +24,19 @@ export class TransacoesService {
       dados.unidade,
     );
 
+    // 1. cria a transação
     const transacao = this.repo.create({
       ...dados,
       cliente,
       pontosGerados,
     });
 
-    return this.repo.save(transacao);
+    const salva = await this.repo.save(transacao);
+
+    // 2. atualiza pontos acumulados
+    await this.pontos.adicionarPontos(cliente, pontosGerados);
+
+    return salva;
   }
 
   listarPorCliente(clienteId: string) {
