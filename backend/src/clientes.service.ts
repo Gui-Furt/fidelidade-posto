@@ -1,39 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-
-export interface Cliente {
-  id: string;
-  nome: string;
-  cpf: string;
-  telefone?: string;
-  email?: string;
-  dataCadastro: Date;
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Cliente } from './entities/cliente.entity';
 
 @Injectable()
 export class ClientesService {
-  private clientes: Cliente[] = [];
+  constructor(
+    @InjectRepository(Cliente)
+    private readonly repo: Repository<Cliente>,
+  ) {}
 
-  criar(dados: Omit<Cliente, 'id' | 'dataCadastro'>): Cliente {
-    const novo = {
-      id: randomUUID(),
-      dataCadastro: new Date(),
-      ...dados,
-    };
-
-    this.clientes.push(novo);
-    return novo;
+  criar(dados: Partial<Cliente>) {
+    const cliente = this.repo.create(dados);
+    return this.repo.save(cliente);
   }
 
   listar() {
-    return this.clientes;
+    return this.repo.find();
   }
 
   buscarPorId(id: string) {
-    return this.clientes.find(c => c.id === id);
+    return this.repo.findOne({ where: { id } });
   }
 
   buscarPorCPF(cpf: string) {
-    return this.clientes.find(c => c.cpf === cpf);
+    return this.repo.findOne({ where: { cpf } });
   }
 }
