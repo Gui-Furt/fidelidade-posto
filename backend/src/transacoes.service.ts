@@ -1,48 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Transacao } from './entities/transacao.entity';
 import { PontosService } from './pontos.service';
-
-export type TipoTransacao = 'combustivel' | 'eletrico' | 'loja' | 'servico';
-
-export interface Transacao {
-  id: string;
-  clienteId: string;
-  tipo: TipoTransacao;
-  valor: number;
-  quantidade: number;
-  unidade: 'litros' | 'kWh' | 'minutos' | 'itens';
-  data: Date;
-  pontosGerados: number;
-}
+import { ClientesService } from './clientes.service';
 
 @Injectable()
 export class TransacoesService {
-  private transacoes: Transacao[] = [];
+  constructor(
+    @InjectRepository(Transacao)
+    private readonly repo: Repository<Transacao>,
+    private readonly pontos: PontosService,
+    private readonly clientes: ClientesService,
+  ) {}
 
-  constructor(private readonly pontos: PontosService) {}
+  async registrar(dados: any) {
+    const cliente = await this.clientes.buscarPorId(dados.clienteId);
 
-  registrar(transacao: Omit<Transacao, 'id' | 'data' | 'pontosGerados'>): Transacao {
-
-    // --- Cálculo automático dos pontos ---
     const pontosGerados = this.pontos.calcularPontos(
-      transacao.tipo,
-      transacao.quantidade,
-      transacao.valor,
-      transacao.unidade
+      dados.tipo,
+      dados.quantidade,
+      dados.valor,
+      dados.unidade,
     );
 
-    const nova: Transacao = {
-      id: randomUUID(),
-      data: new Date(),
-      ...transacao,
-      pontosGerados
-    };
+    const transacao = this.repo.create({
+      ...dados,
+      cliente,
+      pontosGerados,
+    });
 
-    this.transacoes.push(nova);
-    return nova;
+    return this.repo.save(transacao);
   }
 
   listarPorCliente(clienteId: string) {
-    return this.transacoes.filter(t => t.clienteId === clienteId);
+    return this.repo.find({
+      where: { cliente: { id: clienteId } },
+      order: { data: 'DESC' },
+    });
   }
 }
